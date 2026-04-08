@@ -19,7 +19,7 @@ WORKDIR /work
 
 LABEL org.opencontainers.image.title="security-toolbox" \
       org.opencontainers.image.description="Reusable scanner image with Snyk CLI and common tooling" \
-      org.opencontainers.image.source="https://github.com/iCreate1123/security-toolbox" \
+      org.opencontainers.image.source="https://github.com/icreate1123/security-toolbox" \
       org.opencontainers.image.licenses="MIT"
 
 CMD ["/bin/bash"]
