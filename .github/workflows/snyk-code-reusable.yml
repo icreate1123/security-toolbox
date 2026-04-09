@@ -1,0 +1,50 @@
+name: snyk-code-reusable
+
+on:
+  workflow_call:
+    inputs:
+      severity-threshold:
+        required: false
+        type: string
+        default: low
+    secrets:
+      SNYK_TOKEN:
+        required: true
+
+jobs:
+  snyk-code:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+
+    container:
+      image: ghcr.io/icreate1123/security-toolbox:latest
+
+    steps:
+      - name: Checkout caller repository
+        uses: actions/checkout@v5
+
+      - name: Authenticate Snyk
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk auth "${SNYK_TOKEN}"
+
+      - name: Run Snyk Code SAST
+        run: |
+          mkdir -p reports
+          snyk code test \
+            --severity-threshold="${{ inputs.severity-threshold }}" \
+            --sarif-file-output=reports/snyk-code.sarif || true
+
+          # Snyk Code may not create a SARIF file when no issues are found
+          if [ ! -f reports/snyk-code.sarif ]; then
+            printf '{"version":"2.1.0","runs":[]}' > reports/snyk-code.sarif
+          fi
+
+      - name: Upload SARIF to GitHub code scanning
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: reports/snyk-code.sarif
+          category: snyk-code
